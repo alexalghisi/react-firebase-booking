@@ -1,41 +1,24 @@
-import { useEffect, useState } from 'react';
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import {
-  createBooking,
-  deleteBooking,
-  listenBookings,
-} from '../services/bookings';
+import React from "react";
 
-export default function Calendar({ uid }) {
-  const [events, setEvents] = useState([]);
-  useEffect(() => listenBookings(setEvents), []);
+export default function Calendar({ bookings = [] }) {
+  const daysInMonth = 31; // static example
+  const today = new Date().getDate();
+
+  const isBooked = (day) => bookings.includes(day);
 
   return (
-    <FullCalendar
-      plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-      initialView="timeGridWeek"
-      selectable
-      selectMirror
-      height="auto"
-      events={events}
-      select={async info => {
-        const title = prompt('Booking title:');
-        if (title)
-          await createBooking({
-            title,
-            start: info.start,
-            end: info.end,
-            userId: uid,
-          });
-      }}
-      eventClick={async info => {
-        if (info.event.extendedProps.userId !== uid) return; // only owner
-        if (window.confirm('Delete this booking?'))
-          await deleteBooking(info.event.id);
-      }}
-    />
+      <div className="grid grid-cols-7 gap-1 p-4 max-w-3xl mx-auto">
+        {Array.from({ length: daysInMonth }, (_, i) => (
+            <div
+                key={i}
+                className={`rounded p-4 text-center border 
+            ${isBooked(i + 1) ? "bg-red-300" : "bg-gray-100"}
+            ${i + 1 === today ? "border-2 border-blue-500" : ""}
+            hover:bg-blue-200 cursor-pointer transition`}
+            >
+              {i + 1}
+            </div>
+        ))}
+      </div>
   );
 }

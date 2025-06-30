@@ -1,38 +1,23 @@
-import {
-  collection,
-  addDoc,
-  deleteDoc,
-  doc,
-  onSnapshot,
-  query,
-  orderBy,
-  Timestamp,
-} from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { db } from "../firebase/config";
+import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "firebase/firestore";
 
-const ref = collection(db, 'bookings');
+export const getBookings = async () => {
+    const snapshot = await getDocs(collection(db, "bookings"));
+    return snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+    }));
+};
 
-export const createBooking = async ({ title, start, end, userId }) =>
-  addDoc(ref, {
-    title,
-    start: Timestamp.fromDate(start),
-    end: Timestamp.fromDate(end),
-    userId,
-  });
+export const createBooking = async (booking) => {
+    const docRef = await addDoc(collection(db, "bookings"), booking);
+    return docRef.id;
+};
 
-export const deleteBooking = id => deleteDoc(doc(ref, id));
+export const deleteBooking = async (id) => {
+    await deleteDoc(doc(db, "bookings", id));
+};
 
-export const listenBookings = cb =>
-  onSnapshot(query(ref, orderBy('start', 'asc')), snap =>
-    cb(
-      snap.docs.map(d => {
-        const data = d.data();
-        return {
-          id: d.id,
-          ...data,
-          start: data.start.toDate(),
-          end: data.end.toDate(),
-        };
-      }),
-    ),
-  );
+export const updateBooking = async (id, updates) => {
+    await updateDoc(doc(db, "bookings", id), updates);
+};
