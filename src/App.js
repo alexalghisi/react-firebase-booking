@@ -4,7 +4,7 @@ import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import PrivateRoute from "./components/PrivateRoute";
 
-export default function App() {
+const App = () =>  {
     return (
         <Routes>
             <Route
@@ -20,3 +20,5 @@ export default function App() {
         </Routes>
     );
 }
+
+export default App;
