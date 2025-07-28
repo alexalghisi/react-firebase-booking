@@ -70,12 +70,25 @@ const BookingModal = () => {
         return Object.keys(newErrors).length === 0;
     };
 
+// Add this debug code to your BookingModal.jsx handleSubmit function
+
     const handleSubmit = async () => {
         if (!validateForm()) return;
 
         setLoading(true);
 
         try {
+            // Debug: Check authentication state
+            console.log('🔍 Debug - User state:', {
+                uid: user?.uid,
+                email: user?.email,
+                authenticated: !!user
+            });
+
+            if (!user || !user.uid) {
+                throw new Error('User not authenticated or missing UID');
+            }
+
             const bookingData = {
                 title: formData.title.trim(),
                 date: formData.date,
@@ -86,29 +99,49 @@ const BookingModal = () => {
                     : [],
                 description: formData.description.trim(),
                 status: formData.status,
-                createdBy: user.uid,
+                createdBy: user.uid, // This must match the authenticated user's UID
                 updatedAt: new Date()
             };
+
+            // Debug: Log the data being sent
+            console.log('📝 Booking data to be saved:', bookingData);
+            console.log('🔑 CreatedBy field:', bookingData.createdBy);
+            console.log('👤 Current user UID:', user.uid);
 
             if (editingBooking) {
                 // Update existing booking
                 const bookingRef = doc(db, 'bookings', editingBooking.id);
                 await updateDoc(bookingRef, bookingData);
+                console.log('✅ Booking updated successfully');
             } else {
                 // Create new booking
                 bookingData.createdAt = new Date();
-                await addDoc(collection(db, 'bookings'), bookingData);
+                console.log('📝 Final booking data with createdAt:', bookingData);
+
+                const docRef = await addDoc(collection(db, 'bookings'), bookingData);
+                console.log('✅ Booking created successfully with ID:', docRef.id);
             }
 
             handleClose();
         } catch (error) {
-            console.error('Error saving booking:', error);
-            setErrors({ general: 'Failed to save booking. Please try again.' });
+            console.error('❌ Error saving booking:', error);
+            console.error('Error code:', error.code);
+            console.error('Error message:', error.message);
+
+            let errorMessage = 'Failed to save booking. Please try again.';
+
+            if (error.code === 'permission-denied') {
+                errorMessage = 'Permission denied. Please check your Firestore security rules.';
+            } else if (error.code === 'unauthenticated') {
+                errorMessage = 'You must be signed in to create bookings.';
+            }
+
+            setErrors({ general: errorMessage });
         } finally {
             setLoading(false);
         }
     };
-
+    
     const handleClose = () => {
         setShowBookingModal(false);
         setEditingBooking(null);

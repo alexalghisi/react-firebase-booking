@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { auth, db } from './firebase/config';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, query, where } from 'firebase/firestore'; // Added query and where
 
 // Components
 import Navigation from './components/Navigation';
@@ -26,21 +26,37 @@ function App() {
     useEffect(() => {
         if (!user) return;
 
+        console.log('🔍 Setting up Firestore listener for user:', user.uid);
+
+        // FIXED: Query only user's bookings instead of all bookings
         const bookingsRef = collection(db, 'bookings');
-        const unsubscribe = onSnapshot(bookingsRef, (snapshot) => {
-            const bookingsData = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
+        const userBookingsQuery = query(
+            bookingsRef,
+            where('createdBy', '==', user.uid)
+        );
 
-            // Filter bookings for current user or shared bookings
-            const userBookings = bookingsData.filter(booking =>
-                booking.createdBy === user.uid ||
-                booking.attendees.includes(user.email)
-            );
+        const unsubscribe = onSnapshot(
+            userBookingsQuery,
+            (snapshot) => {
+                console.log('📱 Firestore snapshot received:', snapshot.docs.length, 'documents');
 
-            setBookings(userBookings);
-        });
+                const bookingsData = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        ...data
+                    };
+                });
+
+                console.log('✅ User bookings loaded:', bookingsData.length);
+                setBookings(bookingsData);
+            },
+            (error) => {
+                console.error('❌ Firestore listener error:', error);
+                console.error('Error code:', error.code);
+                console.error('Error message:', error.message);
+            }
+        );
 
         return unsubscribe;
     }, [user]);
