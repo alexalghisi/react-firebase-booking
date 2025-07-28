@@ -2,6 +2,8 @@
 
 A modern, real-time booking system built with React and Firebase. Create, manage, and visualize bookings with a beautiful, responsive interface.
 
+<img width="1917" height="1008" alt="image" src="https://github.com/user-attachments/assets/1c3107d3-1da7-419a-8485-6aca40fbee60" />
+
 <img width="1850" height="960" alt="image" src="https://github.com/user-attachments/assets/82326506-1454-4309-bba7-325e40b5c984" />
 
 <img width="1850" height="960" alt="image" src="https://github.com/user-attachments/assets/75c1adf6-faaa-43c4-89db-1aab69e96727" />
