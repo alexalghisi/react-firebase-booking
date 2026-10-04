@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { auth, db } from './firebase/config';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { collection, onSnapshot } from 'firebase/firestore';
+import normalizeBooking from './lib/normalizeBooking';
 
 // Components
 import Navigation from './components/Navigation';
@@ -28,10 +29,9 @@ function App() {
 
         const bookingsRef = collection(db, 'bookings');
         const unsubscribe = onSnapshot(bookingsRef, (snapshot) => {
-            const bookingsData = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
+            const bookingsData = snapshot.docs.map(doc =>
+                normalizeBooking(doc.id, doc.data())
+            );
 
             // Filter bookings for current user or shared bookings
             const userBookings = bookingsData.filter(booking =>
@@ -65,7 +65,7 @@ function App() {
 
     return (
         <BookingProvider value={contextValue}>
-            <Router>
+            <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <div className="min-h-screen bg-gray-100">
                     <Navigation />
 

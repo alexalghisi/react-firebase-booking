@@ -35,6 +35,9 @@ const UpcomingBookings = () => {
     };
 
     const formatTime = (timeStr) => {
+        if (!timeStr || !timeStr.includes(':')) {
+            return '';
+        }
         const [hours, minutes] = timeStr.split(':');
         const hour = parseInt(hours);
         const ampm = hour >= 12 ? 'PM' : 'AM';

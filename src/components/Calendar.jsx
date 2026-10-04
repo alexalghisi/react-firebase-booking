@@ -142,7 +142,7 @@ const CalendarDay = ({ day }) => {
         return <div className="h-24 bg-gray-50"></div>;
     }
 
-    const { date, day: dayNum, bookings, isToday } = day;
+    const { day: dayNum, bookings, isToday } = day;
 
     return (
         <div className={`h-24 border border-gray-200 p-1 cursor-pointer transition-colors ${
