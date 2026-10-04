@@ -15,6 +15,15 @@ console.error = (...args) => {
     originalConsoleError(...args);
 };
 
+const originalConsoleWarn = console.warn.bind(console);
+console.warn = (...args) => {
+    const message = args.map((item) => String(item)).join(' ');
+    if (message.includes('React Router Future Flag Warning')) {
+        return;
+    }
+    originalConsoleWarn(...args);
+};
+
 if (typeof global.TextEncoder === 'undefined') {
     global.TextEncoder = TextEncoder;
 }
