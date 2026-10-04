@@ -65,7 +65,7 @@ function App() {
 
     return (
         <BookingProvider value={contextValue}>
-            <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <Router>
                 <div className="min-h-screen bg-gray-100">
                     <Navigation />
 
