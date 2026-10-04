@@ -2,13 +2,21 @@
 
 A modern, real-time booking system built with React and Firebase. Create, manage, and visualize bookings with a beautiful, responsive interface.
 
-<img width="1917" height="1008" alt="image" src="https://github.com/user-attachments/assets/1c3107d3-1da7-419a-8485-6aca40fbee60" />
+`npm install` then `npm start` opens the sign-in screen. After a Firebase login, the same app gives you the dashboard, the month calendar and the bookings list.
 
-<img width="1850" height="960" alt="image" src="https://github.com/user-attachments/assets/82326506-1454-4309-bba7-325e40b5c984" />
+![Sign in](docs/login.png)
 
-<img width="1850" height="960" alt="image" src="https://github.com/user-attachments/assets/75c1adf6-faaa-43c4-89db-1aab69e96727" />
+![Dashboard](docs/dashboard.png)
 
-<img width="1904" height="1032" alt="image" src="https://github.com/user-attachments/assets/8227c2a8-1236-4218-a770-2931b228d49f" />
+![Calendar](docs/calendar.png)
+
+![Bookings](docs/bookings.png)
+
+![New booking](docs/modal.png)
+
+![Phone](docs/dashboard-mobile.png)
+
+![Walkthrough](docs/preview.gif)
 
 
 ![React](https://img.shields.io/badge/React-18.2.0-blue)
@@ -236,6 +244,8 @@ src/
 │   └── BookingContext.js    # React Context for state
 ├── firebase/
 │   └── config.js            # Firebase configuration
+├── lib/
+│   └── normalizeBooking.js  # Shapes a Firestore booking for the UI
 ├── App.js                   # Main app component
 ├── index.js                 # React entry point
 └── index.css                # Global styles + Tailwind
