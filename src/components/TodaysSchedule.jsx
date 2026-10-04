@@ -12,6 +12,9 @@ const TodaysSchedule = () => {
     };
 
     const formatTime = (timeStr) => {
+        if (!timeStr || !timeStr.includes(':')) {
+            return '';
+        }
         const [hours, minutes] = timeStr.split(':');
         const hour = parseInt(hours);
         const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -29,6 +32,9 @@ const TodaysSchedule = () => {
     };
 
     const isUpcoming = (timeStr) => {
+        if (!timeStr || !timeStr.includes(':')) {
+            return false;
+        }
         const now = new Date();
         const [hours, minutes] = timeStr.split(':');
         const bookingTime = new Date();

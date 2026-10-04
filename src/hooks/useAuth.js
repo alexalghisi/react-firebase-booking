@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { auth, provider } from '../firebase/config';            // import firebase auth & provider
-import { onAuthStateChanged, signInWithRedirect, signOut } from 'firebase/auth';
+import { auth } from '../firebase/config';
+import { GoogleAuthProvider, onAuthStateChanged, signInWithRedirect, signOut } from 'firebase/auth';
 
 export const useAuth = () => {
   const [user, setUser] = useState(); // undefined means loading
@@ -14,7 +14,7 @@ export const useAuth = () => {
     return unsubscribe;
   }, []);
 
-  const login = () => signInWithRedirect(auth, provider);
+  const login = () => signInWithRedirect(auth, new GoogleAuthProvider());
   const logoutUser = () => signOut(auth);
 
   return { user, loading: user === undefined, error, login, logout: logoutUser };

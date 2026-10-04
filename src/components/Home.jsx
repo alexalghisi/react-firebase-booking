@@ -15,7 +15,7 @@ const Home = () => {
 
     const getThisMonthBookings = () => {
         const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
-        return bookings.filter(booking => booking.date.startsWith(currentMonth));
+        return bookings.filter(booking => booking.date && booking.date.startsWith(currentMonth));
     };
 
     const stats = [
