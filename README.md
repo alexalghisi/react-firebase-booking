@@ -37,7 +37,7 @@ A modern, real-time booking system built with React and Firebase. Create, manage
 
 ## Demo
 
-[Live Demo](https://your-app-url.web.app) | [Screenshots](#screenshots)
+`npm install` then `npm start` runs the app on your machine. The pictures at the top of this file are that run: sign-in, dashboard, calendar, bookings, the new-booking dialog, the phone layout, and a short walkthrough.
 
 ## Table of Contents
 
