@@ -18,7 +18,7 @@ const renderHome = () =>
         </BookingProvider>
     );
 
-const statValue = (title) => screen.getByText(title).parentElement.textContent;
+const statValue = (title) => screen.getByRole('region', { name: title }).textContent;
 
 beforeEach(() => {
     process.env.TZ = 'Europe/Bucharest';

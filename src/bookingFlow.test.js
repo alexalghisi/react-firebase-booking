@@ -84,8 +84,8 @@ test('moves from the dashboard to the calendar and creates a booking', async () 
     render(<App />);
 
     expect(screen.getByRole('heading', { name: /dashboard/i })).toBeInTheDocument();
-    expect(screen.getByText('Total Bookings').parentElement).toHaveTextContent('2');
-    expect(screen.getByText("Today's Meetings").parentElement).toHaveTextContent(String(todayCount));
+    expect(screen.getByRole('region', { name: 'Total Bookings' })).toHaveTextContent('2');
+    expect(screen.getByRole('region', { name: "Today's Meetings" })).toHaveTextContent(String(todayCount));
 
     await openNav('Calendar');
     expect(screen.getByText('Design review')).toBeInTheDocument();
@@ -100,10 +100,10 @@ test('moves from the dashboard to the calendar and creates a booking', async () 
     expect(addDoc).not.toHaveBeenCalled();
 
     await userEvent.type(screen.getByPlaceholderText('Enter booking title'), 'Lunch');
-    fireEvent.change(document.querySelector('input[type="date"]'), {
+    fireEvent.change(screen.getByLabelText(/^Date/), {
         target: { value: '2026-10-20' },
     });
-    fireEvent.change(document.querySelector('input[type="time"]'), {
+    fireEvent.change(screen.getByLabelText(/^Time/), {
         target: { value: '10:15' },
     });
     await userEvent.type(

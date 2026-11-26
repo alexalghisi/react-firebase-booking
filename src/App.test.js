@@ -76,6 +76,6 @@ test('opens the dashboard for a signed in user', () => {
     render(<App />);
 
     expect(screen.getByRole('heading', { name: /dashboard/i })).toBeInTheDocument();
-    expect(screen.getByText('Total Bookings').parentElement).toHaveTextContent('1');
+    expect(screen.getByRole('region', { name: 'Total Bookings' })).toHaveTextContent('1');
     expect(screen.getByText('Alex')).toBeInTheDocument();
 });
