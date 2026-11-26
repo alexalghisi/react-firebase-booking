@@ -2,8 +2,6 @@ import { render, screen } from '@testing-library/react';
 import { BookingProvider } from '../context/BookingContext';
 import Home from './Home';
 
-const originalTz = process.env.TZ;
-
 const bookings = [
     { id: '1', title: 'Night sync', date: '2026-11-27', time: '07:00', status: 'confirmed', attendees: [] },
     { id: '2', title: 'Late review', date: '2026-11-26', time: '18:00', status: 'pending', attendees: [] },
@@ -21,14 +19,12 @@ const renderHome = () =>
 const statValue = (title) => screen.getByRole('region', { name: title }).textContent;
 
 beforeEach(() => {
-    process.env.TZ = 'Europe/Bucharest';
     jest.useFakeTimers();
-    jest.setSystemTime(new Date('2026-11-26T22:30:00Z'));
+    jest.setSystemTime(new Date(2026, 10, 27, 0, 30));
 });
 
 afterEach(() => {
     jest.useRealTimers();
-    process.env.TZ = originalTz;
 });
 
 test('counts today by the local day just after midnight', () => {
