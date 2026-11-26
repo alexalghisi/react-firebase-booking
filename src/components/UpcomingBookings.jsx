@@ -1,32 +1,30 @@
 import React from 'react';
 import { useBookingContext } from '../context/BookingContext';
+import { addDays, compareBookings, parseDateKey, toDateKey } from '../lib/dates';
 
 const UpcomingBookings = () => {
     const { bookings, setShowBookingModal } = useBookingContext();
 
     const getUpcomingBookings = () => {
-        const today = new Date().toISOString().split('T')[0];
+        const today = toDateKey();
         return bookings
             .filter(booking => booking.date >= today)
-            .sort((a, b) => {
-                const dateA = new Date(a.date + ' ' + a.time);
-                const dateB = new Date(b.date + ' ' + b.time);
-                return dateA - dateB;
-            })
+            .sort(compareBookings)
             .slice(0, 5);
     };
 
     const formatDate = (dateStr) => {
-        const date = new Date(dateStr);
         const today = new Date();
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
 
-        if (dateStr === today.toISOString().split('T')[0]) {
+        if (dateStr === toDateKey(today)) {
             return 'Today';
-        } else if (dateStr === tomorrow.toISOString().split('T')[0]) {
+        } else if (dateStr === toDateKey(addDays(today, 1))) {
             return 'Tomorrow';
         } else {
+            const date = parseDateKey(dateStr);
+            if (!date) {
+                return '';
+            }
             return date.toLocaleDateString('en-US', {
                 month: 'short',
                 day: 'numeric'
@@ -68,7 +66,7 @@ const UpcomingBookings = () => {
                                 {formatDate(booking.date)} at {formatTime(booking.time)}
                             </p>
                             <p className="text-gray-500 text-xs">
-                                {booking.duration} minutes
+                                {booking.duration ? `${booking.duration} minutes` : ''}
                                 {booking.attendees.length > 0 && (
                                     <span> • {booking.attendees.length} attendee{booking.attendees.length !== 1 ? 's' : ''}</span>
                                 )}

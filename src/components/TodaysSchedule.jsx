@@ -1,14 +1,15 @@
 import React from 'react';
 import { useBookingContext } from '../context/BookingContext';
+import { compareBookings, toDateKey } from '../lib/dates';
 
 const TodaysSchedule = () => {
     const { bookings } = useBookingContext();
 
     const getTodaysBookings = () => {
-        const today = new Date().toISOString().split('T')[0];
+        const today = toDateKey();
         return bookings
             .filter(booking => booking.date === today)
-            .sort((a, b) => a.time.localeCompare(b.time));
+            .sort(compareBookings);
     };
 
     const formatTime = (timeStr) => {
