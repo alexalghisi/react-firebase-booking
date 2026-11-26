@@ -4,17 +4,18 @@ import { useBookingContext } from '../context/BookingContext';
 import StatsCard from './StatsCard';
 import UpcomingBookings from './UpcomingBookings';
 import TodaysSchedule from './TodaysSchedule';
+import { toDateKey, toMonthKey } from '../lib/dates';
 
 const Home = () => {
     const { bookings, setShowBookingModal } = useBookingContext();
 
     const getTodaysBookings = () => {
-        const today = new Date().toISOString().split('T')[0];
+        const today = toDateKey();
         return bookings.filter(booking => booking.date === today);
     };
 
     const getThisMonthBookings = () => {
-        const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+        const currentMonth = toMonthKey();
         return bookings.filter(booking => booking.date && booking.date.startsWith(currentMonth));
     };
 

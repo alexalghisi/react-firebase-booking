@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { useBookingContext } from '../context/BookingContext';
+import { toDateKey } from '../lib/dates';
 
 const Calendar = () => {
     const { bookings, setShowBookingModal } = useBookingContext();
@@ -21,16 +22,14 @@ const Calendar = () => {
 
         const days = [];
 
-        // Empty cells for days before month starts
         for (let i = 0; i < startDate; i++) {
             days.push(null);
         }
 
-        // Days of the month
         for (let day = 1; day <= daysInMonth; day++) {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const dayBookings = bookings.filter(booking => booking.date === dateStr);
-            const isToday = dateStr === new Date().toISOString().split('T')[0];
+            const isToday = dateStr === toDateKey();
 
             days.push({
                 day,

@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { addDoc, collection, onSnapshot } from 'firebase/firestore';
 import App from './App';
+import { toDateKey } from './lib/dates';
 
 jest.mock('react-firebase-hooks/auth', () => ({
     useAuthState: jest.fn(),
@@ -45,7 +46,7 @@ const records = () => ([
     {
         id: '2',
         title: 'Standup',
-        date: new Date().toISOString().split('T')[0],
+        date: toDateKey(),
         time: '16:00',
         duration: 15,
         status: 'pending',
@@ -77,8 +78,8 @@ beforeEach(() => {
 });
 
 test('moves from the dashboard to the calendar and creates a booking', async () => {
-    const utcToday = new Date().toISOString().split('T')[0];
-    const todayCount = records().filter((booking) => booking.date === utcToday).length;
+    const today = toDateKey();
+    const todayCount = records().filter((booking) => booking.date === today).length;
 
     render(<App />);
 
