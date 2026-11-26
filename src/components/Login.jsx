@@ -20,7 +20,6 @@ const Login = () => {
 
     const handleInputChange = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
-        // Clear error when user starts typing
         if (errors[field]) {
             setErrors(prev => ({ ...prev, [field]: '' }));
         }
@@ -45,7 +44,10 @@ const Login = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (event) => {
+        if (event) {
+            event.preventDefault();
+        }
         if (!validateForm()) return;
 
         setLoading(true);
@@ -105,7 +107,6 @@ const Login = () => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
             <div className="max-w-md w-full">
-                {/* Header */}
                 <div className="text-center mb-8">
                     <div className="flex justify-center mb-4">
                         <div className="bg-blue-600 p-3 rounded-full">
@@ -117,8 +118,6 @@ const Login = () => {
                         {isSignUp ? 'Create your account to get started' : 'Sign in to your account'}
                     </p>
                 </div>
-
-                {/* Form */}
                 <div className="bg-white rounded-lg shadow-lg p-8">
                     {errors.general && (
                         <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6">
@@ -126,16 +125,18 @@ const Login = () => {
                         </div>
                     )}
 
-                    <div className="space-y-4">
-                        {/* Email */}
+                    <form className="space-y-4" onSubmit={handleSubmit} noValidate>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-1">
                                 Email Address
                             </label>
                             <div className="relative">
                                 <Mail className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                                 <input
+                                    id="login-email"
                                     type="email"
+                                    autoComplete="email"
+                                    aria-invalid={Boolean(errors.email)}
                                     value={formData.email}
                                     onChange={(e) => handleInputChange('email', e.target.value)}
                                     className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
@@ -149,15 +150,17 @@ const Login = () => {
                             )}
                         </div>
 
-                        {/* Password */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="login-password" className="block text-sm font-medium text-gray-700 mb-1">
                                 Password
                             </label>
                             <div className="relative">
                                 <Lock className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                                 <input
+                                    id="login-password"
                                     type={showPassword ? 'text' : 'password'}
+                                    autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                                    aria-invalid={Boolean(errors.password)}
                                     value={formData.password}
                                     onChange={(e) => handleInputChange('password', e.target.value)}
                                     className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
@@ -167,6 +170,7 @@ const Login = () => {
                                 />
                                 <button
                                     type="button"
+                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                                     onClick={() => setShowPassword(!showPassword)}
                                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                                 >
@@ -178,16 +182,17 @@ const Login = () => {
                             )}
                         </div>
 
-                        {/* Submit Button */}
                         <button
-                            onClick={handleSubmit}
+                            type="submit"
                             disabled={loading}
                             className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                         >
                             {loading ? 'Please wait...' : isSignUp ? 'Create Account' : 'Sign In'}
                         </button>
 
-                        {/* Divider */}
+                    </form>
+
+                    <div className="mt-6">
                         <div className="relative my-6">
                             <div className="absolute inset-0 flex items-center">
                                 <div className="w-full border-t border-gray-300" />
@@ -197,8 +202,8 @@ const Login = () => {
                             </div>
                         </div>
 
-                        {/* Google Sign In */}
                         <button
+                            type="button"
                             onClick={handleGoogleSignIn}
                             disabled={loading}
                             className="w-full bg-white border border-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center space-x-2"
@@ -212,9 +217,9 @@ const Login = () => {
                             <span>Google</span>
                         </button>
 
-                        {/* Toggle Sign Up/Sign In */}
                         <div className="text-center pt-4">
                             <button
+                                type="button"
                                 onClick={() => {
                                     setIsSignUp(!isSignUp);
                                     setErrors({});
@@ -230,8 +235,6 @@ const Login = () => {
                         </div>
                     </div>
                 </div>
-
-                {/* Footer */}
                 <div className="text-center mt-8 text-gray-500 text-sm">
                     <p>Secure booking system powered by Firebase</p>
                 </div>

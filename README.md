@@ -22,6 +22,7 @@ A modern, real-time booking system built with React and Firebase. Create, manage
 ![React](https://img.shields.io/badge/React-18.2.0-blue)
 ![Firebase](https://img.shields.io/badge/Firebase-10.7.1-orange)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.0-blue)
+![CI](https://github.com/alexalghisi/react-firebase-booking/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 ## Features
@@ -46,6 +47,7 @@ A modern, real-time booking system built with React and Firebase. Create, manage
 - [Usage](#usage)
 - [Features](#features-detailed)
 - [Project Structure](#project-structure)
+- [Testing](#testing)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -260,6 +262,17 @@ src/
 - **[React Router](https://reactrouter.com/)** - Navigation and routing
 - **[Lucide React](https://lucide.dev/)** - Beautiful icons
 - **[React Firebase Hooks](https://github.com/CSFrequency/react-firebase-hooks)** - Firebase React hooks
+
+## Testing
+
+| Command | What it checks |
+| --- | --- |
+| `npm run lint` | ESLint on the whole `src` tree, zero warnings allowed |
+| `npm run test:ci` | Unit and integration tests with Jest and Testing Library |
+| `npm run build` | Production build |
+| `npm run e2e` | Playwright end-to-end tests on desktop Chrome and a Pixel 7 viewport against the production build |
+
+Run `npx playwright install chromium` once before the first `npm run e2e`. Every push and pull request runs the same steps in GitHub Actions.
 
 ## Deployment
 

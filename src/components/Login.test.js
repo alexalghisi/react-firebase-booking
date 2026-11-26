@@ -56,8 +56,8 @@ test('signs in with email and password', async () => {
             'alex@example.com',
             'secret'
         );
-        expect(screen.getByRole('button', { name: 'Sign In' })).toBeEnabled();
     });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Sign In' })).toBeEnabled());
 });
 
 test('creates an account from the sign up form', async () => {
@@ -75,8 +75,8 @@ test('creates an account from the sign up form', async () => {
             'alex@example.com',
             'secret'
         );
-        expect(screen.getByRole('button', { name: 'Create Account' })).toBeEnabled();
     });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Create Account' })).toBeEnabled());
 });
 
 test('starts Google sign in', async () => {
@@ -87,8 +87,8 @@ test('starts Google sign in', async () => {
 
     await waitFor(() => {
         expect(signInWithPopup).toHaveBeenCalled();
-        expect(screen.getByRole('button', { name: 'Google' })).toBeEnabled();
     });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Google' })).toBeEnabled());
 });
 
 test('shows a readable message for a bad password', async () => {
@@ -103,4 +103,33 @@ test('shows a readable message for a bad password', async () => {
     await waitFor(() => {
         expect(screen.getByRole('button', { name: 'Sign In' })).toBeEnabled();
     });
+});
+
+test('submits with the Enter key from the labelled fields', async () => {
+    signInWithEmailAndPassword.mockResolvedValue({});
+    render(<Login />);
+
+    await userEvent.type(screen.getByLabelText('Email Address'), 'alex@example.com');
+    await userEvent.type(screen.getByLabelText('Password'), 'secret{enter}');
+
+    await waitFor(() => {
+        expect(signInWithEmailAndPassword).toHaveBeenCalledWith(
+            { app: 'test' },
+            'alex@example.com',
+            'secret'
+        );
+    });
+});
+
+test('toggles password visibility with an accessible button', async () => {
+    render(<Login />);
+
+    const password = screen.getByLabelText('Password');
+    expect(password).toHaveAttribute('type', 'password');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Show password' }));
+    expect(password).toHaveAttribute('type', 'text');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Hide password' }));
+    expect(password).toHaveAttribute('type', 'password');
 });

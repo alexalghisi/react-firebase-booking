@@ -158,10 +158,11 @@ const BookingModal = () => {
 
                     {/* Title */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="booking-title" className="block text-sm font-medium text-gray-700 mb-1">
                             Title *
                         </label>
                         <input
+                            id="booking-title"
                             type="text"
                             value={formData.title}
                             onChange={(e) => handleInputChange('title', e.target.value)}
@@ -178,10 +179,11 @@ const BookingModal = () => {
                     {/* Date and Time */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="booking-date" className="block text-sm font-medium text-gray-700 mb-1">
                                 Date *
                             </label>
                             <input
+                                id="booking-date"
                                 type="date"
                                 value={formData.date}
                                 onChange={(e) => handleInputChange('date', e.target.value)}
@@ -195,10 +197,11 @@ const BookingModal = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="booking-time" className="block text-sm font-medium text-gray-700 mb-1">
                                 Time *
                             </label>
                             <input
+                                id="booking-time"
                                 type="time"
                                 value={formData.time}
                                 onChange={(e) => handleInputChange('time', e.target.value)}
@@ -214,10 +217,11 @@ const BookingModal = () => {
 
                     {/* Duration */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="booking-duration" className="block text-sm font-medium text-gray-700 mb-1">
                             Duration
                         </label>
                         <select
+                            id="booking-duration"
                             value={formData.duration}
                             onChange={(e) => handleInputChange('duration', parseInt(e.target.value))}
                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -234,10 +238,11 @@ const BookingModal = () => {
 
                     {/* Attendees */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="booking-attendees" className="block text-sm font-medium text-gray-700 mb-1">
                             Attendees (optional)
                         </label>
                         <input
+                            id="booking-attendees"
                             type="text"
                             value={formData.attendees}
                             onChange={(e) => handleInputChange('attendees', e.target.value)}
@@ -256,10 +261,11 @@ const BookingModal = () => {
 
                     {/* Status */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="booking-status" className="block text-sm font-medium text-gray-700 mb-1">
                             Status
                         </label>
                         <select
+                            id="booking-status"
                             value={formData.status}
                             onChange={(e) => handleInputChange('status', e.target.value)}
                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -272,10 +278,11 @@ const BookingModal = () => {
 
                     {/* Description */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="booking-description" className="block text-sm font-medium text-gray-700 mb-1">
                             Description (optional)
                         </label>
                         <textarea
+                            id="booking-description"
                             value={formData.description}
                             onChange={(e) => handleInputChange('description', e.target.value)}
                             rows={3}

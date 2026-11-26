@@ -10,7 +10,7 @@ const StatsCard = ({ title, value, icon: Icon, color }) => {
     };
 
     return (
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <section aria-label={title} className="bg-white p-6 rounded-lg shadow-md">
             <div className="flex items-center justify-between">
                 <div>
                     <p className="text-gray-600 text-sm">{title}</p>
@@ -18,9 +18,9 @@ const StatsCard = ({ title, value, icon: Icon, color }) => {
                         {value}
                     </p>
                 </div>
-                <Icon className={`w-12 h-12 ${colorClasses[color]}`} />
+                <Icon aria-hidden="true" className={`w-12 h-12 ${colorClasses[color]}`} />
             </div>
-        </div>
+        </section>
     );
 };
 
