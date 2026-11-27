@@ -21,8 +21,9 @@
     "test": "react-scripts test",
     "test:ci": "react-scripts test --watchAll=false",
     "lint": "eslint src --max-warnings=0",
-    "e2e": "playwright test",
-    "eject": "react-scripts eject"
+    "e2e": "npm run build:e2e && firebase emulators:exec --only auth,firestore --project demo-booking \"playwright test\"",
+    "eject": "react-scripts eject",
+    "build:e2e": "REACT_APP_USE_FIREBASE_EMULATORS=true REACT_APP_FIREBASE_PROJECT_ID=demo-booking BUILD_PATH=build-e2e react-scripts build"
   },
   "eslintConfig": {
     "extends": [
@@ -44,6 +45,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.65.1",
+    "firebase-tools": "^15.37.0",
     "serve": "^14.2.8"
   }
 }

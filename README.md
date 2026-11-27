@@ -31,6 +31,7 @@ A modern, real-time booking system built with React and Firebase. Create, manage
 - **Dashboard** - Overview with statistics and upcoming meetings
 - **Calendar View** - Visual monthly calendar with booking indicators
 - **Booking Management** - Create, edit, delete, and filter bookings
+- **Conflict Detection** - Warns before a booking overlaps one you already have
 - **Search & Filter** - Find bookings by title, attendees, or status
 - **Real-time Updates** - Live synchronization across all users
 - **Responsive Design** - Works on desktop, tablet, and mobile
@@ -270,9 +271,9 @@ src/
 | `npm run lint` | ESLint on the whole `src` tree, zero warnings allowed |
 | `npm run test:ci` | Unit and integration tests with Jest and Testing Library |
 | `npm run build` | Production build |
-| `npm run e2e` | Playwright end-to-end tests on desktop Chrome and a Pixel 7 viewport against the production build |
+| `npm run e2e` | Builds the app against the Firebase Auth and Firestore emulators, starts them and runs Playwright on desktop Chrome and a Pixel 7 viewport, including sign-up and booking flows |
 
-Run `npx playwright install chromium` once before the first `npm run e2e`. Every push and pull request runs the same steps in GitHub Actions.
+Run `npx playwright install chromium` once before the first `npm run e2e`. The emulators need Java 21 or newer. Every push and pull request runs the same steps in GitHub Actions.
 
 ## Deployment
 

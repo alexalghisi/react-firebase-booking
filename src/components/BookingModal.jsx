@@ -3,12 +3,14 @@ import { X } from 'lucide-react';
 import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useBookingContext } from '../context/BookingContext';
+import { describeConflicts, findConflicts } from '../lib/conflicts';
 
 const BookingModal = () => {
     const {
         setShowBookingModal,
         editingBooking,
         setEditingBooking,
+        bookings = [],
         user
     } = useBookingContext();
 
@@ -25,7 +27,6 @@ const BookingModal = () => {
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
 
-    // Populate form when editing
     useEffect(() => {
         if (editingBooking) {
             setFormData({
@@ -55,7 +56,6 @@ const BookingModal = () => {
             newErrors.time = 'Time is required';
         }
 
-        // Validate attendees email format if provided
         if (formData.attendees) {
             const emails = formData.attendees.split(',').map(email => email.trim());
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -63,6 +63,13 @@ const BookingModal = () => {
 
             if (invalidEmails.length > 0) {
                 newErrors.attendees = `Invalid email format: ${invalidEmails.join(', ')}`;
+            }
+        }
+
+        if (Object.keys(newErrors).length === 0) {
+            const conflicts = findConflicts(formData, bookings, editingBooking?.id);
+            if (conflicts.length > 0) {
+                newErrors.conflict = describeConflicts(conflicts);
             }
         }
 
@@ -91,11 +98,9 @@ const BookingModal = () => {
             };
 
             if (editingBooking) {
-                // Update existing booking
                 const bookingRef = doc(db, 'bookings', editingBooking.id);
                 await updateDoc(bookingRef, bookingData);
             } else {
-                // Create new booking
                 bookingData.createdAt = new Date();
                 await addDoc(collection(db, 'bookings'), bookingData);
             }
@@ -108,6 +113,16 @@ const BookingModal = () => {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape' && !loading) {
+                handleClose();
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    });
 
     const handleClose = () => {
         setShowBookingModal(false);
@@ -126,37 +141,49 @@ const BookingModal = () => {
 
     const handleInputChange = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
-        // Clear error when user starts typing
-        if (errors[field]) {
-            setErrors(prev => ({ ...prev, [field]: '' }));
+        if (errors[field] || errors.conflict) {
+            setErrors(prev => ({
+                ...prev,
+                [field]: '',
+                conflict: ['date', 'time', 'duration', 'status'].includes(field) ? '' : prev.conflict
+            }));
         }
     };
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
-                {/* Header */}
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="booking-modal-title"
+                className="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto"
+            >
                 <div className="flex justify-between items-center p-6 border-b border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 id="booking-modal-title" className="text-lg font-semibold text-gray-900">
                         {editingBooking ? 'Edit Booking' : 'Create New Booking'}
                     </h3>
                     <button
+                        type="button"
                         onClick={handleClose}
+                        aria-label="Close"
                         className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
                     >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
-                {/* Form */}
                 <div className="p-6 space-y-4">
                     {errors.general && (
-                        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
+                        <div role="alert" className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
                             {errors.general}
                         </div>
                     )}
+                    {errors.conflict && (
+                        <div role="alert" className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg">
+                            {errors.conflict}
+                        </div>
+                    )}
 
-                    {/* Title */}
                     <div>
                         <label htmlFor="booking-title" className="block text-sm font-medium text-gray-700 mb-1">
                             Title *
@@ -176,7 +203,6 @@ const BookingModal = () => {
                         )}
                     </div>
 
-                    {/* Date and Time */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label htmlFor="booking-date" className="block text-sm font-medium text-gray-700 mb-1">
@@ -215,7 +241,6 @@ const BookingModal = () => {
                         </div>
                     </div>
 
-                    {/* Duration */}
                     <div>
                         <label htmlFor="booking-duration" className="block text-sm font-medium text-gray-700 mb-1">
                             Duration
@@ -236,7 +261,6 @@ const BookingModal = () => {
                         </select>
                     </div>
 
-                    {/* Attendees */}
                     <div>
                         <label htmlFor="booking-attendees" className="block text-sm font-medium text-gray-700 mb-1">
                             Attendees (optional)
@@ -259,7 +283,6 @@ const BookingModal = () => {
                         </p>
                     </div>
 
-                    {/* Status */}
                     <div>
                         <label htmlFor="booking-status" className="block text-sm font-medium text-gray-700 mb-1">
                             Status
@@ -276,7 +299,6 @@ const BookingModal = () => {
                         </select>
                     </div>
 
-                    {/* Description */}
                     <div>
                         <label htmlFor="booking-description" className="block text-sm font-medium text-gray-700 mb-1">
                             Description (optional)
@@ -292,7 +314,6 @@ const BookingModal = () => {
                     </div>
                 </div>
 
-                {/* Footer */}
                 <div className="flex justify-end space-x-3 p-6 border-t border-gray-200">
                     <button
                         onClick={handleClose}
