@@ -27,3 +27,5 @@ yarn-error.log*
 /test-results
 /playwright-report
 /blob-report
+/build-e2e
+*-debug.log

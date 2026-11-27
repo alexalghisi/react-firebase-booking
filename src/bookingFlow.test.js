@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { addDoc, collection, onSnapshot } from 'firebase/firestore';
+import { addDoc, collection, doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import App from './App';
 import { toDateKey } from './lib/dates';
 
@@ -65,6 +65,7 @@ beforeEach(() => {
     window.history.pushState({}, '', '/');
     useAuthState.mockReturnValue([user, false, undefined]);
     collection.mockReturnValue({ path: 'bookings' });
+    doc.mockImplementation((database, collectionName, id) => ({ collectionName, id }));
     addDoc.mockResolvedValue({ id: 'new' });
     onSnapshot.mockImplementation((ref, onNext) => {
         onNext({
@@ -140,4 +141,78 @@ test('lists bookings and edits one from the bookings page', async () => {
     await userEvent.click(screen.getByRole('button', { name: 'Edit Design review' }));
     expect(screen.getByRole('heading', { name: 'Edit Booking' })).toBeInTheDocument();
     expect(await screen.findByDisplayValue('Design review')).toBeInTheDocument();
+});
+
+test('blocks a booking that overlaps an existing one until the time is moved', async () => {
+    render(<App />);
+
+    await openNav('Calendar');
+    await userEvent.click(screen.getByRole('button', { name: 'Add Booking' }));
+
+    await userEvent.type(screen.getByPlaceholderText('Enter booking title'), 'Clash');
+    fireEvent.change(screen.getByLabelText(/^Date/), { target: { value: localDate(15) } });
+    fireEvent.change(screen.getByLabelText(/^Time/), { target: { value: '10:00' } });
+    await userEvent.click(screen.getByRole('button', { name: 'Create Booking' }));
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+        `This time overlaps with Design review (${localDate(15)} 09:30)`
+    );
+    expect(addDoc).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText(/^Time/), { target: { value: '10:30' } });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Create Booking' }));
+
+    expect(addDoc).toHaveBeenCalledWith(
+        { path: 'bookings' },
+        expect.objectContaining({ title: 'Clash', date: localDate(15), time: '10:30' })
+    );
+});
+
+test('allows a booking that only overlaps a cancelled one', async () => {
+    render(<App />);
+
+    await openNav('Calendar');
+    await userEvent.click(screen.getByRole('button', { name: 'Add Booking' }));
+
+    await userEvent.type(screen.getByPlaceholderText('Enter booking title'), 'Second');
+    fireEvent.change(screen.getByLabelText(/^Date/), { target: { value: localDate(15) } });
+    fireEvent.change(screen.getByLabelText(/^Time/), { target: { value: '09:45' } });
+    await userEvent.selectOptions(screen.getByLabelText('Status'), 'cancelled');
+    await userEvent.click(screen.getByRole('button', { name: 'Create Booking' }));
+
+    expect(addDoc).toHaveBeenCalledWith(
+        { path: 'bookings' },
+        expect.objectContaining({ title: 'Second', status: 'cancelled' })
+    );
+});
+
+test('saves an edited booking without flagging itself as a conflict', async () => {
+    render(<App />);
+
+    await openNav('All Bookings');
+    await userEvent.click(screen.getByRole('button', { name: 'Edit Design review' }));
+    await screen.findByDisplayValue('Design review');
+    await userEvent.click(screen.getByRole('button', { name: 'Update Booking' }));
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(updateDoc).toHaveBeenCalledWith(
+        { collectionName: 'bookings', id: '1' },
+        expect.objectContaining({ title: 'Design review', time: '09:30' })
+    );
+});
+
+test('exposes the booking form as a dialog that closes with Escape', async () => {
+    render(<App />);
+
+    await openNav('Calendar');
+    await userEvent.click(screen.getByRole('button', { name: 'Add Booking' }));
+
+    expect(screen.getByRole('dialog', { name: 'Create New Booking' })).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add Booking' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });

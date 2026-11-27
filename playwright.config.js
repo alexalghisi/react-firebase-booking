@@ -17,7 +17,7 @@ module.exports = defineConfig({
         { name: 'mobile', use: { ...devices['Pixel 7'] } },
     ],
     webServer: {
-        command: `npx serve -s build -l ${port}`,
+        command: `npx serve -s build-e2e -l ${port}`,
         url: `http://localhost:${port}`,
         reuseExistingServer: !process.env.CI,
         timeout: 120000,
