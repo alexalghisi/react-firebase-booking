@@ -10,6 +10,8 @@ jest.mock('react-firebase-hooks/auth', () => ({
 jest.mock('firebase/firestore', () => ({
     getFirestore: jest.fn(() => ({})),
     collection: jest.fn(() => ({ path: 'bookings' })),
+    query: jest.fn((ref, ...constraints) => ({ ref, constraints })),
+    where: jest.fn((field, op, value) => ({ field, op, value })),
     onSnapshot: jest.fn((ref, onNext) => {
         onNext({ docs: [] });
         return jest.fn();
@@ -78,4 +80,17 @@ test('opens the dashboard for a signed in user', () => {
     expect(screen.getByRole('heading', { name: /dashboard/i })).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'Total Bookings' })).toHaveTextContent('1');
     expect(screen.getByText('Alex')).toBeInTheDocument();
+});
+
+test('tells the user when their bookings cannot be loaded', () => {
+    useAuthState.mockReturnValue([user, false, undefined]);
+    onSnapshot.mockImplementation((ref, onNext, onError) => {
+        onError(Object.assign(new Error('denied'), { code: 'permission-denied' }));
+        return jest.fn();
+    });
+
+    render(<App />);
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Your bookings could not be loaded.');
+    expect(screen.getByRole('heading', { name: /dashboard/i })).toBeInTheDocument();
 });

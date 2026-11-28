@@ -12,6 +12,8 @@ jest.mock('react-firebase-hooks/auth', () => ({
 jest.mock('firebase/firestore', () => ({
     getFirestore: jest.fn(() => ({})),
     collection: jest.fn(() => ({ path: 'bookings' })),
+    query: jest.fn((ref, ...constraints) => ({ ref, constraints })),
+    where: jest.fn((field, op, value) => ({ field, op, value })),
     onSnapshot: jest.fn(),
     addDoc: jest.fn(() => Promise.resolve({ id: 'new' })),
     doc: jest.fn((db, collectionName, id) => ({ collectionName, id })),
@@ -215,4 +217,70 @@ test('exposes the booking form as a dialog that closes with Escape', async () =>
     await userEvent.click(screen.getByRole('button', { name: 'Add Booking' }));
     await userEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+});
+
+test('saves attendee emails in lower case without duplicates', async () => {
+    render(<App />);
+
+    await openNav('Calendar');
+    await userEvent.click(screen.getByRole('button', { name: 'Add Booking' }));
+
+    await userEvent.type(screen.getByPlaceholderText('Enter booking title'), 'Planning');
+    fireEvent.change(screen.getByLabelText(/^Date/), { target: { value: localDate(20) } });
+    fireEvent.change(screen.getByLabelText(/^Time/), { target: { value: '12:00' } });
+    fireEvent.change(screen.getByLabelText(/^Attendees/), {
+        target: { value: 'Sam@Example.com, sam@example.com , ,JO@example.com' },
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'Create Booking' }));
+
+    expect(addDoc).toHaveBeenCalledWith(
+        { path: 'bookings' },
+        expect.objectContaining({ attendees: ['sam@example.com', 'jo@example.com'], createdBy: 'u1' })
+    );
+});
+
+test('rejects a title longer than the stored limit', async () => {
+    render(<App />);
+
+    await openNav('Calendar');
+    await userEvent.click(screen.getByRole('button', { name: 'Add Booking' }));
+
+    expect(screen.getByLabelText(/^Title/)).toHaveAttribute('maxLength', '200');
+    fireEvent.change(screen.getByLabelText(/^Title/), { target: { value: 'x'.repeat(201) } });
+    fireEvent.change(screen.getByLabelText(/^Date/), { target: { value: localDate(20) } });
+    fireEvent.change(screen.getByLabelText(/^Time/), { target: { value: '12:00' } });
+    await userEvent.click(screen.getByRole('button', { name: 'Create Booking' }));
+
+    expect(screen.getByText('Title must be 200 characters or fewer')).toBeInTheDocument();
+    expect(addDoc).not.toHaveBeenCalled();
+});
+
+test('explains when the server refuses to save a booking', async () => {
+    addDoc.mockRejectedValueOnce(Object.assign(new Error('denied'), { code: 'permission-denied' }));
+    render(<App />);
+
+    await openNav('Calendar');
+    await userEvent.click(screen.getByRole('button', { name: 'Add Booking' }));
+
+    await userEvent.type(screen.getByPlaceholderText('Enter booking title'), 'Planning');
+    fireEvent.change(screen.getByLabelText(/^Date/), { target: { value: localDate(20) } });
+    fireEvent.change(screen.getByLabelText(/^Time/), { target: { value: '12:00' } });
+    await userEvent.click(screen.getByRole('button', { name: 'Create Booking' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('You do not have permission to save this booking.');
+    expect(screen.getByRole('dialog', { name: 'Create New Booking' })).toBeInTheDocument();
+});
+
+test('keeps the original owner when an edited booking is saved', async () => {
+    render(<App />);
+
+    await openNav('All Bookings');
+    await userEvent.click(screen.getByRole('button', { name: 'Edit Standup' }));
+    await screen.findByDisplayValue('Standup');
+    await userEvent.click(screen.getByRole('button', { name: 'Update Booking' }));
+
+    expect(updateDoc).toHaveBeenCalledWith(
+        { collectionName: 'bookings', id: '2' },
+        expect.objectContaining({ createdBy: 'u1' })
+    );
 });

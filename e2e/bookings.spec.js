@@ -1,7 +1,7 @@
 const { test, expect } = require('@playwright/test');
 
-const signUp = async (page, testInfo) => {
-    const email = `e2e-${testInfo.project.name}-${Date.now()}-${testInfo.workerIndex}@example.com`;
+const signUp = async (page, testInfo, role = 'user') => {
+    const email = `e2e-${role}-${testInfo.project.name}-${Date.now()}-${testInfo.workerIndex}@example.com`;
     await page.goto('/');
     await page.getByRole('button', { name: /don't have an account/i }).click();
     await page.getByLabel('Email Address').fill(email);
@@ -11,13 +11,24 @@ const signUp = async (page, testInfo) => {
     return email;
 };
 
-const fillBooking = async (dialog, { title, date, time, duration }) => {
+const fillBooking = async (dialog, { title, date, time, duration, attendees }) => {
     await dialog.getByLabel(/^Title/).fill(title);
     await dialog.getByLabel(/^Date/).fill(date);
     await dialog.getByLabel(/^Time/).fill(time);
     if (duration) {
         await dialog.getByLabel('Duration').selectOption(String(duration));
     }
+    if (attendees) {
+        await dialog.getByLabel(/^Attendees/).fill(attendees);
+    }
+};
+
+const createBooking = async (page, booking) => {
+    await page.getByRole('button', { name: 'New Booking' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Create New Booking' });
+    await fillBooking(dialog, booking);
+    await dialog.getByRole('button', { name: 'Create Booking' }).click();
+    await expect(dialog).toBeHidden();
 };
 
 test('signs up, creates a booking and blocks an overlapping one', async ({ page }, testInfo) => {
@@ -56,4 +67,39 @@ test('closes the booking dialog with Escape', async ({ page }, testInfo) => {
     await expect(dialog).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(dialog).toBeHidden();
+});
+
+test('shares a booking only with its invited attendee', async ({ browser, page }, testInfo) => {
+    const { viewport, userAgent, deviceScaleFactor, isMobile, hasTouch, baseURL } = testInfo.project.use;
+    const guestContext = await browser.newContext({ viewport, userAgent, deviceScaleFactor, isMobile, hasTouch, baseURL });
+    const guestPage = await guestContext.newPage();
+
+    try {
+        const guestEmail = await signUp(guestPage, testInfo, 'guest');
+        await signUp(page, testInfo, 'owner');
+
+        await createBooking(page, {
+            title: 'Shared review',
+            date: '2030-06-03',
+            time: '09:00',
+            attendees: guestEmail.toUpperCase(),
+        });
+        await createBooking(page, { title: 'Private plan', date: '2030-06-03', time: '13:00' });
+
+        await page.goto('/bookings');
+        const ownerRow = page.getByRole('row', { name: /Shared review/ });
+        await expect(ownerRow).toContainText(guestEmail);
+        await expect(ownerRow.getByRole('button', { name: 'Edit Shared review' })).toBeVisible();
+        await expect(page.getByRole('row', { name: /Private plan/ })).toBeVisible();
+
+        await guestPage.goto('/bookings');
+        const guestRow = guestPage.getByRole('row', { name: /Shared review/ });
+        await expect(guestRow).toBeVisible();
+        await expect(guestRow).toContainText('Shared');
+        await expect(guestRow.getByRole('button', { name: 'Edit Shared review' })).toHaveCount(0);
+        await expect(guestPage.getByText('Private plan')).toHaveCount(0);
+        await expect(guestPage.getByRole('alert')).toHaveCount(0);
+    } finally {
+        await guestContext.close();
+    }
 });

@@ -20,6 +20,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "test:ci": "react-scripts test --watchAll=false",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-booking \"node --test rules/firestore.rules.test.js\"",
     "lint": "eslint src --max-warnings=0",
     "e2e": "npm run build:e2e && firebase emulators:exec --only auth,firestore --project demo-booking \"playwright test\"",
     "eject": "react-scripts eject",
@@ -44,6 +45,7 @@
     ]
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^3.0.4",
     "@playwright/test": "^1.65.1",
     "firebase-tools": "^15.37.0",
     "serve": "^14.2.8"
