@@ -5,6 +5,17 @@ import { db } from '../firebase/config';
 import { useBookingContext } from '../context/BookingContext';
 import { describeConflicts, findConflicts } from '../lib/conflicts';
 
+const TITLE_LIMIT = 200;
+const DESCRIPTION_LIMIT = 2000;
+const ATTENDEE_LIMIT = 50;
+
+export const parseAttendees = (value) => Array.from(new Set(
+    String(value || '')
+        .split(',')
+        .map((email) => email.trim().toLowerCase())
+        .filter(Boolean)
+));
+
 const BookingModal = () => {
     const {
         setShowBookingModal,
@@ -46,6 +57,8 @@ const BookingModal = () => {
 
         if (!formData.title.trim()) {
             newErrors.title = 'Title is required';
+        } else if (formData.title.trim().length > TITLE_LIMIT) {
+            newErrors.title = `Title must be ${TITLE_LIMIT} characters or fewer`;
         }
 
         if (!formData.date) {
@@ -57,13 +70,19 @@ const BookingModal = () => {
         }
 
         if (formData.attendees) {
-            const emails = formData.attendees.split(',').map(email => email.trim());
+            const emails = parseAttendees(formData.attendees);
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             const invalidEmails = emails.filter(email => email && !emailRegex.test(email));
 
             if (invalidEmails.length > 0) {
                 newErrors.attendees = `Invalid email format: ${invalidEmails.join(', ')}`;
+            } else if (emails.length > ATTENDEE_LIMIT) {
+                newErrors.attendees = `Invite at most ${ATTENDEE_LIMIT} attendees`;
             }
+        }
+
+        if (formData.description.trim().length > DESCRIPTION_LIMIT) {
+            newErrors.description = `Description must be ${DESCRIPTION_LIMIT} characters or fewer`;
         }
 
         if (Object.keys(newErrors).length === 0) {
@@ -88,12 +107,10 @@ const BookingModal = () => {
                 date: formData.date,
                 time: formData.time,
                 duration: parseInt(formData.duration),
-                attendees: formData.attendees
-                    ? formData.attendees.split(',').map(email => email.trim()).filter(email => email)
-                    : [],
+                attendees: parseAttendees(formData.attendees),
                 description: formData.description.trim(),
                 status: formData.status,
-                createdBy: user.uid,
+                createdBy: editingBooking?.createdBy || user.uid,
                 updatedAt: new Date()
             };
 
@@ -107,8 +124,11 @@ const BookingModal = () => {
 
             handleClose();
         } catch (error) {
-            console.error('Error saving booking:', error);
-            setErrors({ general: 'Failed to save booking. Please try again.' });
+            setErrors({
+                general: error?.code === 'permission-denied'
+                    ? 'You do not have permission to save this booking.'
+                    : 'Failed to save booking. Please try again.'
+            });
         } finally {
             setLoading(false);
         }
@@ -197,6 +217,7 @@ const BookingModal = () => {
                                 errors.title ? 'border-red-300' : 'border-gray-300'
                             }`}
                             placeholder="Enter booking title"
+                            maxLength={TITLE_LIMIT}
                         />
                         {errors.title && (
                             <p className="text-red-600 text-sm mt-1">{errors.title}</p>
@@ -308,9 +329,13 @@ const BookingModal = () => {
                             value={formData.description}
                             onChange={(e) => handleInputChange('description', e.target.value)}
                             rows={3}
+                            maxLength={DESCRIPTION_LIMIT}
                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                             placeholder="Add any additional details..."
                         />
+                        {errors.description && (
+                            <p className="text-red-600 text-sm mt-1">{errors.description}</p>
+                        )}
                     </div>
                 </div>
 

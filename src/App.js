@@ -1,11 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { auth, db } from './firebase/config';
+import { auth } from './firebase/config';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { collection, onSnapshot } from 'firebase/firestore';
-import normalizeBooking from './lib/normalizeBooking';
-
-// Components
+import { useBookings } from './hooks/useBookings';
 import Navigation from './components/Navigation';
 import Home from './components/Home';
 import Calendar from './components/Calendar';
@@ -13,49 +10,23 @@ import AllBookings from './components/AllBookings';
 import BookingModal from './components/BookingModal';
 import Login from './components/Login';
 import LoadingSpinner from './components/LoadingSpinner';
-
-// Context
 import { BookingProvider } from './context/BookingContext';
 
 function App() {
     const [user, loading, error] = useAuthState(auth);
-    const [bookings, setBookings] = useState([]);
+    const { bookings, error: bookingsError } = useBookings(user);
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [editingBooking, setEditingBooking] = useState(null);
-
-    // Subscribe to bookings when user is authenticated
-    useEffect(() => {
-        if (!user) return;
-
-        const bookingsRef = collection(db, 'bookings');
-        const unsubscribe = onSnapshot(bookingsRef, (snapshot) => {
-            const bookingsData = snapshot.docs.map(doc =>
-                normalizeBooking(doc.id, doc.data())
-            );
-
-            // Filter bookings for current user or shared bookings
-            const userBookings = bookingsData.filter(booking =>
-                booking.createdBy === user.uid ||
-                booking.attendees.includes(user.email)
-            );
-
-            setBookings(userBookings);
-        });
-
-        return unsubscribe;
-    }, [user]);
 
     if (loading) return <LoadingSpinner />;
     if (error) return <div className="text-red-500 p-4">Error: {error.message}</div>;
 
-    // If not authenticated, show login
     if (!user) {
         return <Login />;
     }
 
     const contextValue = {
         bookings,
-        setBookings,
         showBookingModal,
         setShowBookingModal,
         editingBooking,
@@ -70,6 +41,13 @@ function App() {
                     <Navigation />
 
                     <main>
+                        {bookingsError && (
+                            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+                                <div role="alert" className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                                    Your bookings could not be loaded. Check your connection and try again.
+                                </div>
+                            </div>
+                        )}
                         <Routes>
                             <Route path="/" element={<Home />} />
                             <Route path="/calendar" element={<Calendar />} />

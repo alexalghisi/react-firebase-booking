@@ -151,28 +151,15 @@ export const db = getFirestore(app);
 export default app;
 ```
 
-### 6. Set Up Security Rules
+### 6. Deploy the Security Rules
 
-Update your Firestore security rules:
+The rules live in [`firestore.rules`](firestore.rules) and are covered by `npm run test:rules`. They let a signed-in user read a booking they created or are invited to, let only the creator create, edit or delete it, and reject malformed records (missing fields, bad dates or times, unknown statuses, oversized text, extra fields). Everything outside `bookings` is denied.
 
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /bookings/{bookingId} {
-      allow read: if request.auth != null && 
-        (resource.data.createdBy == request.auth.uid || 
-         request.auth.token.email in resource.data.attendees);
-      
-      allow create: if request.auth != null && 
-        request.auth.uid == resource.data.createdBy;
-      
-      allow update, delete: if request.auth != null && 
-        request.auth.uid == resource.data.createdBy;
-    }
-  }
-}
+```bash
+firebase deploy --only firestore:rules
 ```
+
+The app only asks Firestore for the current user's own bookings and the ones that list their email as an attendee, so these rules work without any client-side filtering.
 
 ## Usage
 
@@ -247,7 +234,12 @@ src/
 │   └── BookingContext.js    # React Context for state
 ├── firebase/
 │   └── config.js            # Firebase configuration
+├── hooks/
+│   └── useBookings.js       # Live owned and shared bookings for the user
 ├── lib/
+│   ├── conflicts.js         # Overlap detection between bookings
+│   ├── dates.js             # Local date helpers
+│   ├── mergeBookings.js     # Combines owned and shared bookings
 │   └── normalizeBooking.js  # Shapes a Firestore booking for the UI
 ├── App.js                   # Main app component
 ├── index.js                 # React entry point
@@ -270,8 +262,9 @@ src/
 | --- | --- |
 | `npm run lint` | ESLint on the whole `src` tree, zero warnings allowed |
 | `npm run test:ci` | Unit and integration tests with Jest and Testing Library |
+| `npm run test:rules` | Firestore security rules tests against the Firestore emulator |
 | `npm run build` | Production build |
-| `npm run e2e` | Builds the app against the Firebase Auth and Firestore emulators, starts them and runs Playwright on desktop Chrome and a Pixel 7 viewport, including sign-up and booking flows |
+| `npm run e2e` | Builds the app against the Firebase Auth and Firestore emulators, starts them and runs Playwright on desktop Chrome and a Pixel 7 viewport, including sign-up, booking and sharing flows under the real security rules |
 
 Run `npx playwright install chromium` once before the first `npm run e2e`. The emulators need Java 21 or newer. Every push and pull request runs the same steps in GitHub Actions.
 

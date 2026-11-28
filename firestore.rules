@@ -1,0 +1,48 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userEmail() {
+      return string(request.auth.token.get('email', '')).lower();
+    }
+
+    function isOwner(data) {
+      return signedIn() && data.createdBy == request.auth.uid;
+    }
+
+    function isAttendee(data) {
+      return signedIn() && userEmail() != '' && userEmail() in data.get('attendees', []);
+    }
+
+    function optionalTimestamp(data, field) {
+      return !(field in data) || data[field] is timestamp;
+    }
+
+    function validBooking(data) {
+      return data.keys().hasOnly(['title', 'date', 'time', 'duration', 'attendees', 'description', 'status', 'createdBy', 'createdAt', 'updatedAt'])
+        && data.keys().hasAll(['title', 'date', 'time', 'duration', 'attendees', 'status', 'createdBy'])
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 200
+        && data.date is string && data.date.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$')
+        && data.time is string && data.time.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')
+        && data.duration is int && data.duration > 0 && data.duration <= 1440
+        && data.attendees is list && data.attendees.size() <= 50
+        && (!('description' in data) || (data.description is string && data.description.size() <= 2000))
+        && data.status in ['confirmed', 'pending', 'cancelled']
+        && optionalTimestamp(data, 'createdAt')
+        && optionalTimestamp(data, 'updatedAt');
+    }
+
+    match /bookings/{bookingId} {
+      allow read: if isOwner(resource.data) || isAttendee(resource.data);
+      allow create: if isOwner(request.resource.data) && validBooking(request.resource.data);
+      allow update: if isOwner(resource.data)
+        && request.resource.data.createdBy == resource.data.createdBy
+        && validBooking(request.resource.data);
+      allow delete: if isOwner(resource.data);
+    }
+  }
+}
